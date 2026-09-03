@@ -1871,11 +1871,19 @@
           <i class="fa-solid fa-user-plus"></i>
           <span class="btn-text">إضافة فرد</span>
         </button>
+        <button class="btn btn-gold" id="nav-github-sync-btn" onclick="openGitHubSyncModal()" title="نشر التغييرات على GitHub Pages لجميع الزوار">
+          <i class="fa-brands fa-github"></i>
+          <span class="btn-text">نشر لـ GitHub</span>
+          <span id="sync-pending-dot" style="display:none; width:8px; height:8px; border-radius:50%; background:#FF4B4B; margin-right:4px;"></span>
+        </button>
         <button class="btn btn-outline btn-icon-only" onclick="exportSVG()" title="تصدير كمتجه Vector SVG">
           <i class="fa-solid fa-file-code"></i>
         </button>
         <button class="btn btn-outline btn-icon-only" onclick="exportJSON()" title="نسخ احتياطي للبيانات JSON">
           <i class="fa-solid fa-database"></i>
+        </button>
+        <button class="btn btn-outline btn-icon-only" onclick="resetToAuthenticHierarchy()" title="استعادة الشجرة الأصلية الأساسية">
+          <i class="fa-solid fa-rotate-left"></i>
         </button>
         <button class="btn btn-outline btn-icon-only" onclick="handleLogout()" title="تسجيل الخروج">
           <i class="fa-solid fa-right-from-bracket"></i>
@@ -1886,15 +1894,7 @@
     <!-- SECONDARY BAR (BRANCH FILTERS & CONTROLS) -->
     <div class="secondary-bar">
       <div class="chips-container" id="branch-chips">
-        <button class="filter-chip active" onclick="filterByBranch('all', this)">الكل</button>
-        <button class="filter-chip" onclick="filterByBranch('فرع حاج فارس', this)">فرع حاج فارس</button>
-        <button class="filter-chip" onclick="filterByBranch('فرع عبد اللطيف بن مصطفى', this)">فرع عبد اللطيف (مصطفى)</button>
-        <button class="filter-chip" onclick="filterByBranch('فرع عبد اللطيف بن أحمد', this)">فرع عبد اللطيف (أحمد)</button>
-        <button class="filter-chip" onclick="filterByBranch('فرع برقو', this)">فرع آل برقو</button>
-        <button class="filter-chip" onclick="filterByBranch('فرع محمد بن أحمد', this)">فرع محمد بن أحمد</button>
-        <button class="filter-chip" onclick="filterByBranch('فرع عبد الله بن أحمد', this)">فرع عبد الله</button>
-        <button class="filter-chip" onclick="filterByBranch('فرع علي بن أحمد', this)">فرع علي</button>
-        <button class="filter-chip" onclick="filterByBranch('فرع عمر بن أحمد', this)">فرع عمر</button>
+        <!-- Populated dynamically via renderBranchChips() -->
       </div>
 
       <div class="quick-tools">
@@ -2165,7 +2165,7 @@
         <form id="add-member-form" onsubmit="handleAddMemberSubmit(event)">
           <div class="form-group">
             <label class="form-label" for="new-member-parent">الوالد (اختر من القائمة):</label>
-            <select id="new-member-parent" class="form-select" required>
+            <select id="new-member-parent" class="form-select" onchange="onAddParentChange()" required>
               <!-- Populated dynamically -->
             </select>
           </div>
@@ -2173,6 +2173,11 @@
           <div class="form-group">
             <label class="form-label" for="new-member-name">اسم الفرد (بدون كلمة بن):</label>
             <input type="text" id="new-member-name" class="form-input" placeholder="مثال: عبد الله" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="new-member-branch">الفرع العائلي:</label>
+            <input type="text" id="new-member-branch" class="form-input" list="branch-datalist" placeholder="يورث تلقائياً من الوالد ويمكن تخصيصه">
           </div>
 
           <div class="form-group">
@@ -2218,6 +2223,18 @@
           <div class="form-group">
             <label class="form-label" for="edit-member-name">الاسم الكامل:</label>
             <input type="text" id="edit-member-name" class="form-input" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="edit-member-branch">الفرع العائلي:</label>
+            <input type="text" id="edit-member-branch" class="form-input" list="branch-datalist" required>
+          </div>
+
+          <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: -5px; margin-bottom: 15px;">
+            <input type="checkbox" id="edit-cascade-branch" checked style="accent-color: var(--primary-green); width: 18px; height: 18px; cursor: pointer;">
+            <label for="edit-cascade-branch" style="font-size: 12px; color: var(--text-muted); cursor: pointer;">
+              تحديث اسم الفرع لجميع الأبناء والأحفاد (الذرية) في حال تغييره
+            </label>
           </div>
 
           <div class="form-group">
@@ -2284,6 +2301,60 @@
     </div>
   </div>
 
+  <!-- DATALIST FOR BRANCHES -->
+  <datalist id="branch-datalist"></datalist>
+
+  <!-- GITHUB SYNC & PERMANENT PUBLISH MODAL -->
+  <div id="github-sync-modal" class="modal-backdrop" onclick="closeModalOnBackdrop(event, 'github-sync-modal')">
+    <div class="modal-card" style="max-width: 540px;">
+      <button class="modal-close-btn" onclick="closeGitHubSyncModal()" aria-label="إغلاق">&times;</button>
+      
+      <div class="modal-header">
+        <div class="emblem-icon" style="width:58px;height:58px;font-size:24px;margin-bottom:10px;background:#24292E;color:#FFF;border-color:#444;">
+          <i class="fa-brands fa-github"></i>
+        </div>
+        <h2 class="modal-name" style="font-size:20px;">حفظ وتحديث قاعدة البيانات على GitHub</h2>
+        <div class="modal-kunyah-title">لضمان حفظ الأبناء والتعديلات لجميع زوار موقع الشجرة</div>
+      </div>
+
+      <div class="modal-body" style="padding: 20px;">
+        <div style="background: var(--gold-light); border-right: 4px solid var(--gold-accent); padding: 12px; border-radius: 8px; font-size: 12.5px; line-height: 1.6; margin-bottom: 16px;">
+          <i class="fa-solid fa-circle-info" style="color:var(--gold-bronze);"></i>
+          <strong>كيف يعمل الحفظ الدائم؟</strong><br>
+          موقع الشجرة مستضاف على GitHub Pages. لحفظ أي تغييرات (إضافة أبناء، تعديل فروع، تصحيح بيانات) لتظهر لجميع أفراد العائلة على هواتفهم وحواسيبهم، يمكنك <strong>النشر المباشر عبر رمز GitHub</strong> أو <strong>تحميل ملف البيانات لاستبداله محلياً</strong>.
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="github-token-input">
+            رمز GitHub الشخصي (Personal Access Token):
+            <a href="https://github.com/settings/tokens/new?scopes=repo&description=GhashimTreeSync" target="_blank" style="color:var(--primary-green); font-size:11px; margin-right:6px; text-decoration:underline;">(اضغط هنا لإنشاء رمز بضغطة زر)</a>
+          </label>
+          <input type="password" id="github-token-input" class="form-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+            يحفظ الرمز في متصفحك بأمان فقط لاستخدامه في نشر التحديثات دون إعادة إدخاله كل مرة.
+          </div>
+        </div>
+
+        <div id="github-sync-status" style="display:none; padding: 10px; border-radius: 6px; font-size: 12px; margin-bottom: 12px;"></div>
+
+        <div style="display: flex; gap: 10px; flex-direction: column;">
+          <button type="button" class="login-btn" onclick="handlePublishToGitHub()" id="btn-publish-gh" style="background:#24292E;">
+            <i class="fa-brands fa-github"></i> حفظ ونشر التغييرات الآن إلى GitHub Pages
+          </button>
+
+          <div style="display: flex; gap: 10px; margin-top: 8px;">
+            <button type="button" class="btn btn-outline" onclick="downloadFamilyDataJSON()" style="flex: 1; padding: 10px; font-size: 12px;">
+              <i class="fa-solid fa-download"></i> تحميل family-data.json
+            </button>
+            <button type="button" class="btn btn-outline" onclick="resetToAuthenticHierarchy()" style="color:#C53030; border-color:#FEB2B2; padding: 10px; font-size: 12px;" title="استعادة الـ 36 اسماً الأصليين">
+              <i class="fa-solid fa-rotate-left"></i> استعادة الهيكلية الأصلية
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST NOTIFICATION -->
   <div id="toast" class="toast-msg">
     <i class="fa-solid fa-circle-check" id="toast-icon"></i>
@@ -2295,10 +2366,372 @@
        ========================================================= -->
   <script>
     // Embedded Family Tree Dataset (280 Individuals across 9 Generations)
-    let initialFamilyData = [{"id": "1", "name": "محمد علي غشيم", "parentId": null, "generation": 1, "branch": "الأصل", "kunyah": "أبو يوسف", "title": "الجد الجامع والمؤسس لآل غشيم", "bio": "الجد الأكبر لعموم عائلة غشيم (بيت غشيم)، ويعود نسب السلالة إلى شواح."}, {"id": "2", "name": "يوسف غشيم", "parentId": "1", "generation": 2, "branch": "الأصل", "kunyah": "أبو أحمد وأبو مصطفى", "title": "والد فرعي الأسرة الرئيسيين", "bio": "تفرع منه الفرعان الكبيران: فرع أحمد وفرع مصطفى."}, {"id": "3", "name": "أحمد غشيم", "parentId": "2", "generation": 3, "branch": "فرع أحمد", "kunyah": "أبو عبد اللطيف", "title": "رأس فرع أحمد وأبناؤه التسعة", "bio": "أنجب تسعة أبناء تفرعت منهم كبرى بطون عائلة غشيم."}, {"id": "4", "name": "مصطفى غشيم", "parentId": "2", "generation": 3, "branch": "فرع مصطفى", "kunyah": "أبو يوسف", "title": "رأس فرع مصطفى وحاج فارس", "bio": "تفرع منه آل حاج فارس وآل عبد اللطيف بن مصطفى."}, {"id": "m1", "name": "يوسف بن مصطفى غشيم", "parentId": "4", "generation": 4, "branch": "فرع حاج فارس", "kunyah": "أبو فارس", "title": "والد حاج فارس", "bio": ""}, {"id": "m2", "name": "عبد اللطيف بن مصطفى غشيم", "parentId": "4", "generation": 4, "branch": "فرع عبد اللطيف بن مصطفى", "kunyah": "أبو أحمد", "title": "رأس فرع عبد اللطيف بن مصطفى", "bio": ""}, {"id": "m1_1", "name": "فارس غشيم (حاج فارس)", "parentId": "m1", "generation": 5, "branch": "فرع حاج فارس", "kunyah": "حاج فارس", "title": "الجد المؤسس لفرع حاج فارس", "bio": "تسمى السلالة باسمه (آل حاج فارس)."}, {"id": "hf1", "name": "مصطفى حاج فارس", "parentId": "m1_1", "generation": 6, "branch": "فرع حاج فارس", "kunyah": "أبو مصطفى", "title": "وجيه من آل حاج فارس", "bio": ""}, {"id": "hf2", "name": "أحمد (محمود) حاج فارس", "parentId": "m1_1", "generation": 6, "branch": "فرع حاج فارس", "kunyah": "أبو عبد الرزاق", "title": "والد عبد الرزاق وإبراهيم", "bio": ""}, {"id": "hf1_1", "name": "محمد فارس (فارس)", "parentId": "hf1", "generation": 7, "branch": "فرع حاج فارس", "kunyah": "أبو مصطفى", "title": "من كبار وجهاء العائلة", "bio": ""}, {"id": "hf1_2", "name": "أحمد حاج فارس", "parentId": "hf1", "generation": 7, "branch": "فرع حاج فارس", "kunyah": "أبو سامر", "title": "", "bio": ""}, {"id": "hf1_3", "name": "محمود حاج فارس", "parentId": "hf1", "generation": 7, "branch": "فرع حاج فارس", "kunyah": "أبو محمد", "title": "", "bio": ""}, {"id": "hf1_4", "name": "عبد القادر حاج فارس", "parentId": "hf1", "generation": 7, "branch": "فرع حاج فارس", "kunyah": "أبو عبد الله", "title": "", "bio": ""}, {"id": "hf1_1_1", "name": "مصطفى بن محمد فارس", "parentId": "hf1_1", "generation": 8, "branch": "فرع حاج فارس", "kunyah": "أبو مصطفى", "title": "مشارك في توثيق الشجرة 2010", "bio": ""}, {"id": "hf1_1_2", "name": "محمود بن محمد فارس", "parentId": "hf1_1", "generation": 8, "branch": "فرع حاج فارس", "kunyah": "أبو محمد", "title": "", "bio": ""}, {"id": "hf1_1_3", "name": "نبيل بن محمد فارس", "parentId": "hf1_1", "generation": 8, "branch": "فرع حاج فارس", "kunyah": "أبو فاضل", "title": "", "bio": ""}, {"id": "hf1_1_4", "name": "عبد الكريم بن محمد فارس", "parentId": "hf1_1", "generation": 8, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hf1_1_5", "name": "عبد الله بن محمد فارس", "parentId": "hf1_1", "generation": 8, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hf1_1_6", "name": "يوسف بن محمد فارس", "parentId": "hf1_1", "generation": 8, "branch": "فرع حاج فارس", "kunyah": "أبو محمد مزين", "title": "", "bio": ""}, {"id": "hff1_1", "name": "محمد بن مصطفى", "parentId": "hf1_1_1", "generation": 9, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hff1_2", "name": "فراس بن مصطفى", "parentId": "hf1_1_1", "generation": 9, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hff1_3", "name": "حمزة بن مصطفى", "parentId": "hf1_1_1", "generation": 9, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hff1_4", "name": "عبد الرحمن بن مصطفى", "parentId": "hf1_1_1", "generation": 9, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hff1_5", "name": "عبد الله بن مصطفى", "parentId": "hf1_1_1", "generation": 9, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hff2_1", "name": "محمد بن محمود", "parentId": "hf1_1_2", "generation": 9, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hff2_2", "name": "قصي بن محمود", "parentId": "hf1_1_2", "generation": 9, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hff3_1", "name": "فاضل بن نبيل", "parentId": "hf1_1_3", "generation": 9, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hff3_2", "name": "ريان بن نبيل", "parentId": "hf1_1_3", "generation": 9, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hff6_1", "name": "محمد مزين بن يوسف", "parentId": "hf1_1_6", "generation": 9, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hff6_2", "name": "نوح بن يوسف", "parentId": "hf1_1_6", "generation": 9, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hfa_1", "name": "سامر بن أحمد حاج فارس", "parentId": "hf1_2", "generation": 8, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hfa_2", "name": "ياسر بن أحمد حاج فارس", "parentId": "hf1_2", "generation": 8, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hfa_3", "name": "مصطفى بن أحمد حاج فارس", "parentId": "hf1_2", "generation": 8, "branch": "فرع حاج فارس", "kunyah": "أبو قصي", "title": "", "bio": ""}, {"id": "hfa_3_1", "name": "قصي بن مصطفى", "parentId": "hfa_3", "generation": 9, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hfa_3_2", "name": "أحمد بن مصطفى", "parentId": "hfa_3", "generation": 9, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hf2_1", "name": "عبد الرزاق بن أحمد حاج فارس", "parentId": "hf2", "generation": 7, "branch": "فرع حاج فارس", "kunyah": "أبو أحمد", "title": "المرحوم المهدى إليه العمل التوثيقي", "bio": "نهدي مجهودنا في هذا العمل إلى والدنا المرحوم عبد الرزاق بن أحمد (محمود) يوسف وإخوانه من له ترجمة في شجرة ونقل صوت العائلة حتى وصلت."}, {"id": "hf2_2", "name": "إبراهيم بن أحمد حاج فارس", "parentId": "hf2", "generation": 7, "branch": "فرع حاج فارس", "kunyah": "أبو محمد فاضل", "title": "", "bio": ""}, {"id": "hf2_1_1", "name": "د. م. أحمد بن عبد الرزاق حاج فارس", "parentId": "hf2_1", "generation": 8, "branch": "فرع حاج فارس", "kunyah": "أبو عبد الله", "title": "جامع وموثق شجرة العائلة ومعد الدراسة 2010", "bio": "قام بالتحضير والدراسة والإسقاط لشجرة عائلة غشيم بتاريخ 01 يناير 2010 م."}, {"id": "hf2_1_2", "name": "د. محمود جمال بن عبد الرزاق حاج فارس", "parentId": "hf2_1", "generation": 8, "branch": "فرع حاج فارس", "kunyah": "أبو طارق", "title": "دكتور مشارك في إعداد وتدقيق النسب 2010", "bio": ""}, {"id": "hf2_1_3", "name": "مصطفى بن عبد الرزاق حاج فارس", "parentId": "hf2_1", "generation": 8, "branch": "فرع حاج فارس", "kunyah": "أبو عبد الرزاق", "title": "", "bio": ""}, {"id": "hf2_1_4", "name": "سامر بن عبد الرزاق حاج فارس", "parentId": "hf2_1", "generation": 8, "branch": "فرع حاج فارس", "kunyah": "أبو عبد الله", "title": "", "bio": ""}, {"id": "hf2_1_5", "name": "محمد زياد بن عبد الرزاق حاج فارس", "parentId": "hf2_1", "generation": 8, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hf2_1_6", "name": "وليد بن عبد الرزاق حاج فارس", "parentId": "hf2_1", "generation": 8, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hf2_1_1_1", "name": "عبد الرزاق بن أحمد حاج فارس", "parentId": "hf2_1_1", "generation": 9, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hf2_1_1_2", "name": "محمد بن أحمد حاج فارس", "parentId": "hf2_1_1", "generation": 9, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hf2_1_2_1", "name": "طارق بن محمود جمال", "parentId": "hf2_1_2", "generation": 9, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hf2_1_4_1", "name": "عبد الله بن سامر", "parentId": "hf2_1_4", "generation": 9, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hf2_2_1", "name": "محمد فاضل بن إبراهيم", "parentId": "hf2_2", "generation": 8, "branch": "فرع حاج فارس", "kunyah": "أبو محمود", "title": "", "bio": ""}, {"id": "hf2_2_1_1", "name": "محمود بن محمد فاضل", "parentId": "hf2_2_1", "generation": 9, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hf2_2_1_2", "name": "عبد المنعم بن محمد فاضل", "parentId": "hf2_2_1", "generation": 9, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hf2_2_1_3", "name": "أحمد بن محمد فاضل", "parentId": "hf2_2_1", "generation": 9, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "hf2_2_1_4", "name": "إبراهيم بن محمد فاضل", "parentId": "hf2_2_1", "generation": 9, "branch": "فرع حاج فارس", "kunyah": "", "title": "", "bio": ""}, {"id": "m2_1", "name": "أحمد بن عبد اللطيف غشيم", "parentId": "m2", "generation": 5, "branch": "فرع عبد اللطيف بن مصطفى", "kunyah": "أبو محمد", "title": "", "bio": ""}, {"id": "m2_1_1", "name": "عبد الحميد بن أحمد غشيم", "parentId": "m2_1", "generation": 6, "branch": "فرع عبد اللطيف بن مصطفى", "kunyah": "", "title": "", "bio": ""}, {"id": "m2_1_2", "name": "محمد بن أحمد غشيم", "parentId": "m2_1", "generation": 6, "branch": "فرع عبد اللطيف بن مصطفى", "kunyah": "أبو محمود", "title": "", "bio": ""}, {"id": "m2_1_2_1", "name": "محمود بن محمد غشيم", "parentId": "m2_1_2", "generation": 7, "branch": "فرع عبد اللطيف بن مصطفى", "kunyah": "أبو أحمد", "title": "", "bio": ""}, {"id": "m2_mm_1", "name": "أحمد بن محمود غشيم", "parentId": "m2_1_2_1", "generation": 8, "branch": "فرع عبد اللطيف بن مصطفى", "kunyah": "أبو جمال", "title": "", "bio": ""}, {"id": "m2_mm_2", "name": "مصطفى بن محمود غشيم", "parentId": "m2_1_2_1", "generation": 8, "branch": "فرع عبد اللطيف بن مصطفى", "kunyah": "أبو محمد مزين", "title": "", "bio": ""}, {"id": "m2_mm_3", "name": "ياسر بن محمود غشيم", "parentId": "m2_1_2_1", "generation": 8, "branch": "فرع عبد اللطيف بن مصطفى", "kunyah": "", "title": "", "bio": ""}, {"id": "m2_mm_4", "name": "عبد المنعم بن محمود غشيم", "parentId": "m2_1_2_1", "generation": 8, "branch": "فرع عبد اللطيف بن مصطفى", "kunyah": "أبو محمود", "title": "", "bio": ""}, {"id": "m2_mm_5", "name": "فريد بن محمود غشيم", "parentId": "m2_1_2_1", "generation": 8, "branch": "فرع عبد اللطيف بن مصطفى", "kunyah": "أبو عبد المنعم", "title": "", "bio": ""}, {"id": "m2_mm_6", "name": "محمد بن محمود غشيم", "parentId": "m2_1_2_1", "generation": 8, "branch": "فرع عبد اللطيف بن مصطفى", "kunyah": "", "title": "", "bio": ""}, {"id": "m2_mm1_1", "name": "جمال بن أحمد غشيم", "parentId": "m2_mm_1", "generation": 9, "branch": "فرع عبد اللطيف بن مصطفى", "kunyah": "", "title": "", "bio": ""}, {"id": "m2_mm1_2", "name": "محمد بن أحمد غشيم", "parentId": "m2_mm_1", "generation": 9, "branch": "فرع عبد اللطيف بن مصطفى", "kunyah": "", "title": "", "bio": ""}, {"id": "m2_mm2_1", "name": "محمد مزين بن مصطفى", "parentId": "m2_mm_2", "generation": 9, "branch": "فرع عبد اللطيف بن مصطفى", "kunyah": "", "title": "", "bio": ""}, {"id": "m2_mm2_2", "name": "أنس بن مصطفى", "parentId": "m2_mm_2", "generation": 9, "branch": "فرع عبد اللطيف بن مصطفى", "kunyah": "", "title": "", "bio": ""}, {"id": "m2_mm4_1", "name": "محمود بن عبد المنعم", "parentId": "m2_mm_4", "generation": 9, "branch": "فرع عبد اللطيف بن مصطفى", "kunyah": "", "title": "", "bio": ""}, {"id": "m2_mm4_2", "name": "أحمد بن عبد المنعم", "parentId": "m2_mm_4", "generation": 9, "branch": "فرع عبد اللطيف بن مصطفى", "kunyah": "", "title": "", "bio": ""}, {"id": "m2_mm5_1", "name": "عبد المنعم بن فريد", "parentId": "m2_mm_5", "generation": 9, "branch": "فرع عبد اللطيف بن مصطفى", "kunyah": "", "title": "", "bio": ""}, {"id": "m2_mm5_2", "name": "عبد الله بن فريد", "parentId": "m2_mm_5", "generation": 9, "branch": "فرع عبد اللطيف بن مصطفى", "kunyah": "", "title": "", "bio": ""}, {"id": "h_al", "name": "عبد اللطيف بن أحمد غشيم", "parentId": "3", "generation": 4, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "أبو محمد", "title": "الابن الأول لأحمد", "bio": ""}, {"id": "h_abdullah", "name": "عبد الله بن أحمد غشيم", "parentId": "3", "generation": 4, "branch": "فرع عبد الله بن أحمد", "kunyah": "أبو عبد القادر", "title": "مشارك في توثيق الشجرة 2010", "bio": "مذكور في وثيقة الشجرة: عبد الله بن أحمد غشيم (أبو عبد القادر)"}, {"id": "h_ali", "name": "علي بن أحمد غشيم", "parentId": "3", "generation": 4, "branch": "فرع علي بن أحمد", "kunyah": "أبو محمود", "title": "الابن الثالث لأحمد", "bio": ""}, {"id": "h_hasan", "name": "حسن بن أحمد غشيم", "parentId": "3", "generation": 4, "branch": "فرع حسن بن أحمد", "kunyah": "أبو أحمد", "title": "الابن الرابع لأحمد", "bio": ""}, {"id": "h_barqou", "name": "يوسف (برقو) بن أحمد غشيم", "parentId": "3", "generation": 4, "branch": "فرع برقو", "kunyah": "أبو إبراهيم", "title": "رأس فرع آل برقو", "bio": "تفرع منه بطن آل برقو المشهور في عائلة غشيم."}, {"id": "h_omar", "name": "عمر بن أحمد غشيم", "parentId": "3", "generation": 4, "branch": "فرع عمر بن أحمد", "kunyah": "أبو عبيد", "title": "الابن السادس لأحمد", "bio": ""}, {"id": "h_ibrahim", "name": "إبراهيم بن أحمد غشيم", "parentId": "3", "generation": 4, "branch": "فرع إبراهيم بن أحمد", "kunyah": "أبو مصطفى", "title": "الابن السابع لأحمد", "bio": ""}, {"id": "h_salim", "name": "سليم بن أحمد غشيم", "parentId": "3", "generation": 4, "branch": "فرع سليم بن أحمد", "kunyah": "أبو محمد نور", "title": "الابن الثامن لأحمد", "bio": ""}, {"id": "h_muhammad", "name": "محمد بن أحمد غشيم", "parentId": "3", "generation": 4, "branch": "فرع محمد بن أحمد", "kunyah": "أبو سالم", "title": "الابن التاسع لأحمد - صاحب الفروع الواسعة", "bio": ""}, {"id": "hal_m", "name": "محمد بن عبد اللطيف غشيم", "parentId": "h_al", "generation": 5, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "أبو عطوف", "title": "", "bio": ""}, {"id": "hal_h", "name": "حيدر بن عبد اللطيف غشيم", "parentId": "h_al", "generation": 5, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "أبو أحمد", "title": "مذكور في وثيقة 2010", "bio": ""}, {"id": "hal_m_attouf", "name": "عطوف بن محمد غشيم", "parentId": "hal_m", "generation": 6, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "أبو محمد", "title": "مشارك في توثيق الشجرة 2010", "bio": "عطوف بن محمد غشيم (أبو محمد)"}, {"id": "hal_m_khalil", "name": "خليل بن محمد غشيم", "parentId": "hal_m", "generation": 6, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "أبو محمد مقاش", "title": "", "bio": ""}, {"id": "hal_m_qusay", "name": "قصي بن محمد غشيم", "parentId": "hal_m", "generation": 6, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hal_m_haitham", "name": "هيثم بن محمد غشيم", "parentId": "hal_m", "generation": 6, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hal_m_hasan", "name": "حسن بن محمد غشيم", "parentId": "hal_m", "generation": 6, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hal_m_mahmoud", "name": "محمود بن محمد غشيم", "parentId": "hal_m", "generation": 6, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "أبو طلال", "title": "مشارك في توثيق الشجرة 2010", "bio": "محمود بن محمد غشيم (أبو طلال)"}, {"id": "hal_m_bassam", "name": "بسام بن محمد غشيم", "parentId": "hal_m", "generation": 6, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hal_m_abdulsalam", "name": "عبد السلام بن محمد غشيم", "parentId": "hal_m", "generation": 6, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hal_m_abdulrazzaq", "name": "عبد الرزاق بن محمد غشيم", "parentId": "hal_m", "generation": 6, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "att_1", "name": "محمد بن عطوف", "parentId": "hal_m_attouf", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "att_2", "name": "أحمد بن عطوف", "parentId": "hal_m_attouf", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "att_3", "name": "محمود بن عطوف", "parentId": "hal_m_attouf", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "att_1_1", "name": "عطوف بن محمد", "parentId": "att_1", "generation": 8, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "att_1_2", "name": "أحمد بن محمد", "parentId": "att_1", "generation": 8, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "att_2_1", "name": "عطوف بن أحمد", "parentId": "att_2", "generation": 8, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "att_2_2", "name": "محمد بن أحمد", "parentId": "att_2", "generation": 8, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "att_3_1", "name": "محمد بن محمود", "parentId": "att_3", "generation": 8, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "att_3_2", "name": "أحمد بن محمود", "parentId": "att_3", "generation": 8, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "kha_1", "name": "محمد مقاش بن خليل", "parentId": "hal_m_khalil", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "أبو محمد", "title": "مشارك في توثيق الشجرة 2010", "bio": "محمد بن خليل أحمد مقاش (أبو محمد)"}, {"id": "kha_2", "name": "أحمد بن خليل", "parentId": "hal_m_khalil", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "kha_1_1", "name": "خليل بن محمد مقاش", "parentId": "kha_1", "generation": 8, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "kha_1_2", "name": "أحمد بن محمد مقاش", "parentId": "kha_1", "generation": 8, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "kha_1_3", "name": "محمود بن محمد مقاش", "parentId": "kha_1", "generation": 8, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "kha_2_1", "name": "خليل بن أحمد", "parentId": "kha_2", "generation": 8, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "kha_2_2", "name": "محمد بن أحمد", "parentId": "kha_2", "generation": 8, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "qus_1", "name": "علاء بن قصي", "parentId": "hal_m_qusay", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "qus_2", "name": "محمد بن قصي", "parentId": "hal_m_qusay", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hai_1", "name": "فراس بن هيثم", "parentId": "hal_m_haitham", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hai_2", "name": "أحمد بن هيثم", "parentId": "hal_m_haitham", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "has_1", "name": "نور بن حسن", "parentId": "hal_m_hasan", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "has_2", "name": "محمود بن حسن", "parentId": "hal_m_hasan", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "mah_t1", "name": "طلال بن محمود", "parentId": "hal_m_mahmoud", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "mah_t2", "name": "محمد بن محمود", "parentId": "hal_m_mahmoud", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "mah_t3", "name": "بشار بن محمود", "parentId": "hal_m_mahmoud", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "bas_1", "name": "سامر بن بسام", "parentId": "hal_m_bassam", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "bas_2", "name": "أحمد بن بسام", "parentId": "hal_m_bassam", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "asl_1", "name": "محمد بن عبد السلام", "parentId": "hal_m_abdulsalam", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "asl_2", "name": "محمود بن عبد السلام", "parentId": "hal_m_abdulsalam", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "arz_1", "name": "عبد اللطيف بن عبد الرزاق", "parentId": "hal_m_abdulrazzaq", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "arz_2", "name": "أحمد بن عبد الرزاق", "parentId": "hal_m_abdulrazzaq", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hyd_1", "name": "محمود بن حيدر", "parentId": "hal_h", "generation": 6, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "أبو أحمد", "title": "مذكور في وثيقة 2010", "bio": ""}, {"id": "hyd_2", "name": "حيدر بن أحمد بن حيدر", "parentId": "hal_h", "generation": 6, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "أبو أحمد", "title": "مشارك في توثيق الشجرة 2010", "bio": "حيدر بن أحمد غشيم (أبو أحمد)"}, {"id": "hyd_3", "name": "جميل بن حيدر", "parentId": "hal_h", "generation": 6, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "nayef", "name": "نايف بن محمود بن حيدر", "parentId": "hyd_1", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "أبو عبد القادر", "title": "مشارك في توثيق الشجرة 2010", "bio": "نايف بن حيدر (أبو عبد القادر)"}, {"id": "hyd_ahmad", "name": "أحمد بن محمود بن حيدر", "parentId": "hyd_1", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "nayef_1", "name": "عبد القادر بن نايف", "parentId": "nayef", "generation": 8, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "nayef_2", "name": "أحمد بن نايف", "parentId": "nayef", "generation": 8, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "nayef_3", "name": "محمد بن نايف", "parentId": "nayef", "generation": 8, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "nayef_4", "name": "محمود بن نايف", "parentId": "nayef", "generation": 8, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hyd_a1", "name": "حيدر بن أحمد", "parentId": "hyd_ahmad", "generation": 8, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hyd_a2", "name": "عمر بن أحمد", "parentId": "hyd_ahmad", "generation": 8, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hyd_j1", "name": "حيدر بن جميل", "parentId": "hyd_3", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hyd_j2", "name": "فادي بن جميل", "parentId": "hyd_3", "generation": 7, "branch": "فرع عبد اللطيف بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "habd_hamad", "name": "أحمد بن عبد الله غشيم", "parentId": "h_abdullah", "generation": 5, "branch": "فرع عبد الله بن أحمد", "kunyah": "أبو عبد القادر", "title": "", "bio": ""}, {"id": "habd_abdulqader", "name": "عبد القادر بن أحمد غشيم", "parentId": "habd_hamad", "generation": 6, "branch": "فرع عبد الله بن أحمد", "kunyah": "أبو عبد الله", "title": "", "bio": ""}, {"id": "habd_abdullah", "name": "عبد الله بن أحمد غشيم", "parentId": "habd_hamad", "generation": 6, "branch": "فرع عبد الله بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "habd_muhammad", "name": "محمد بن أحمد غشيم", "parentId": "habd_hamad", "generation": 6, "branch": "فرع عبد الله بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "habd_aq_1", "name": "عبد الله بن عبد القادر", "parentId": "habd_abdulqader", "generation": 7, "branch": "فرع عبد الله بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "habd_aq_2", "name": "أحمد بن عبد القادر", "parentId": "habd_abdulqader", "generation": 7, "branch": "فرع عبد الله بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "habd_aq_3", "name": "أحمد بن عبد القادر", "parentId": "habd_abdulqader", "generation": 7, "branch": "فرع عبد الله بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "habd_aq_4", "name": "محمود بن عبد القادر", "parentId": "habd_abdulqader", "generation": 7, "branch": "فرع عبد الله بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hali_m", "name": "محمود بن علي غشيم", "parentId": "h_ali", "generation": 5, "branch": "فرع علي بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hali_ar", "name": "عبد الرزاق بن علي غشيم", "parentId": "h_ali", "generation": 5, "branch": "فرع علي بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hali_z", "name": "زياد بن علي غشيم", "parentId": "h_ali", "generation": 5, "branch": "فرع علي بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hali_m_1", "name": "علي بن محمود", "parentId": "hali_m", "generation": 6, "branch": "فرع علي بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hali_m_2", "name": "أحمد بن محمود", "parentId": "hali_m", "generation": 6, "branch": "فرع علي بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hali_ar_1", "name": "محمد بن عبد الرزاق", "parentId": "hali_ar", "generation": 6, "branch": "فرع علي بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hali_ar_2", "name": "مصطفى بن عبد الرزاق", "parentId": "hali_ar", "generation": 6, "branch": "فرع علي بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hali_z_1", "name": "علاء بن زياد", "parentId": "hali_z", "generation": 6, "branch": "فرع علي بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hali_z_2", "name": "علي بن زياد", "parentId": "hali_z", "generation": 6, "branch": "فرع علي بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hhas_a", "name": "أحمد بن حسن غشيم", "parentId": "h_hasan", "generation": 5, "branch": "فرع حسن بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hhas_m", "name": "محمد بن حسن غشيم", "parentId": "h_hasan", "generation": 5, "branch": "فرع حسن بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hhas_a_1", "name": "حسن بن أحمد", "parentId": "hhas_a", "generation": 6, "branch": "فرع حسن بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hhas_a_2", "name": "محمد بن أحمد", "parentId": "hhas_a", "generation": 6, "branch": "فرع حسن بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hhas_m_1", "name": "أحمد بن محمد", "parentId": "hhas_m", "generation": 6, "branch": "فرع حسن بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hhas_m_2", "name": "محمود بن محمد", "parentId": "hhas_m", "generation": 6, "branch": "فرع حسن بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_ibrahim", "name": "إبراهيم بن يوسف (برقو)", "parentId": "h_barqou", "generation": 5, "branch": "فرع برقو", "kunyah": "أبو يوسف", "title": "مشارك في توثيق الشجرة 2010", "bio": "إبراهيم بن يوسف (برقو) غشيم (أبو يوسف)"}, {"id": "bq_mahmoud", "name": "محمود بن يوسف (برقو)", "parentId": "h_barqou", "generation": 5, "branch": "فرع برقو", "kunyah": "أبو عناد", "title": "مشارك في توثيق الشجرة 2010", "bio": "محمود بن محمود غشيم (أبو عناد)"}, {"id": "bq_abdulrazzaq", "name": "عبد الرزاق بن يوسف (برقو)", "parentId": "h_barqou", "generation": 5, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_amer", "name": "عامر بن يوسف (برقو)", "parentId": "h_barqou", "generation": 5, "branch": "فرع برقو", "kunyah": "أبو محمد", "title": "", "bio": ""}, {"id": "bq_tayseer", "name": "تيسير بن يوسف (برقو)", "parentId": "h_barqou", "generation": 5, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_ib_m", "name": "محمد بن إبراهيم (برقو)", "parentId": "bq_ibrahim", "generation": 6, "branch": "فرع برقو", "kunyah": "أبو يوسف", "title": "", "bio": ""}, {"id": "bq_ib_a", "name": "أحمد بن إبراهيم (برقو)", "parentId": "bq_ibrahim", "generation": 6, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_ib_mst", "name": "مصطفى بن إبراهيم (برقو)", "parentId": "bq_ibrahim", "generation": 6, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_ibm_1", "name": "يوسف بن محمد (برقو)", "parentId": "bq_ib_m", "generation": 7, "branch": "فرع برقو", "kunyah": "أبو محمد", "title": "مشارك في توثيق الشجرة 2010", "bio": "يوسف بن محمد (برقو) غشيم (أبو محمد)"}, {"id": "bq_ibm_2", "name": "أحمد بن محمد (برقو)", "parentId": "bq_ib_m", "generation": 7, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_ibm_3", "name": "مصطفى بن محمد (برقو)", "parentId": "bq_ib_m", "generation": 7, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_iba_1", "name": "إبراهيم بن أحمد (برقو)", "parentId": "bq_ib_a", "generation": 7, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_iba_2", "name": "محمد بن أحمد (برقو)", "parentId": "bq_ib_a", "generation": 7, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_ibmst_1", "name": "إبراهيم بن مصطفى (برقو)", "parentId": "bq_ib_mst", "generation": 7, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_ibmst_2", "name": "يوسف بن مصطفى (برقو)", "parentId": "bq_ib_mst", "generation": 7, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_mah_m", "name": "محمد بن محمود (برقو)", "parentId": "bq_mahmoud", "generation": 6, "branch": "فرع برقو", "kunyah": "أبو محمود", "title": "مشارك في توثيق الشجرة 2010", "bio": "محمد بن محمود (برقو) غشيم (أبو محمود)"}, {"id": "bq_mah_enad", "name": "عناد بن محمود (برقو)", "parentId": "bq_mahmoud", "generation": 6, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_mah_yousef", "name": "يوسف بن محمود (برقو)", "parentId": "bq_mahmoud", "generation": 6, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_mahm_1", "name": "محمود بن محمد (برقو)", "parentId": "bq_mah_m", "generation": 7, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_mahm_2", "name": "يوسف بن محمد (برقو)", "parentId": "bq_mah_m", "generation": 7, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_enad_1", "name": "محمود بن عناد (برقو)", "parentId": "bq_mah_enad", "generation": 7, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_enad_2", "name": "أحمد بن عناد (برقو)", "parentId": "bq_mah_enad", "generation": 7, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_arz_1", "name": "يوسف بن عبد الرزاق (برقو)", "parentId": "bq_abdulrazzaq", "generation": 6, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_arz_2", "name": "عامر بن عبد الرزاق (برقو)", "parentId": "bq_abdulrazzaq", "generation": 6, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_am_m", "name": "محمد بن عامر (برقو)", "parentId": "bq_amer", "generation": 6, "branch": "فرع برقو", "kunyah": "أبو أحمد", "title": "", "bio": ""}, {"id": "bq_am_a", "name": "أحمد بن عامر (برقو)", "parentId": "bq_amer", "generation": 6, "branch": "فرع برقو", "kunyah": "أبو محمد", "title": "مشارك في توثيق الشجرة 2010", "bio": "عامر بن أحمد (برقو) غشيم (أبو محمد)"}, {"id": "bq_amm_1", "name": "أحمد بن محمد (برقو)", "parentId": "bq_am_m", "generation": 7, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_amm_2", "name": "طارق بن محمد (برقو)", "parentId": "bq_am_m", "generation": 7, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_amm_3", "name": "يوسف بن محمد (برقو)", "parentId": "bq_am_m", "generation": 7, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_ama_1", "name": "محمد بن أحمد (برقو)", "parentId": "bq_am_a", "generation": 7, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_ama_2", "name": "عامر بن أحمد (برقو)", "parentId": "bq_am_a", "generation": 7, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_tay_1", "name": "عمار بن تيسير (برقو)", "parentId": "bq_tayseer", "generation": 6, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_tay_2", "name": "مصطفى بن تيسير (برقو)", "parentId": "bq_tayseer", "generation": 6, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "bq_tay_3", "name": "أحمد بن تيسير (برقو)", "parentId": "bq_tayseer", "generation": 6, "branch": "فرع برقو", "kunyah": "", "title": "", "bio": ""}, {"id": "hom_obaid", "name": "بن عبيد غشيم", "parentId": "h_omar", "generation": 5, "branch": "فرع عمر بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hom_omar", "name": "عمر بن عبيد غشيم", "parentId": "hom_obaid", "generation": 6, "branch": "فرع عمر بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hom_o_1", "name": "وليد بن عمر غشيم", "parentId": "hom_omar", "generation": 7, "branch": "فرع عمر بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hom_o_2", "name": "عبد الله بن عمر غشيم", "parentId": "hom_omar", "generation": 7, "branch": "فرع عمر بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hom_o_3", "name": "محمد بن عمر غشيم", "parentId": "hom_omar", "generation": 7, "branch": "فرع عمر بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hom_o_4", "name": "أحمد بن عمر غشيم", "parentId": "hom_omar", "generation": 7, "branch": "فرع عمر بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hom_o1_1", "name": "عمر بن وليد", "parentId": "hom_o_1", "generation": 8, "branch": "فرع عمر بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hom_o1_2", "name": "محمد بن وليد", "parentId": "hom_o_1", "generation": 8, "branch": "فرع عمر بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hom_o2_1", "name": "عمر بن عبد الله", "parentId": "hom_o_2", "generation": 8, "branch": "فرع عمر بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hom_o2_2", "name": "أحمد بن عبد الله", "parentId": "hom_o_2", "generation": 8, "branch": "فرع عمر بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hom_o3_1", "name": "عمر بن محمد", "parentId": "hom_o_3", "generation": 8, "branch": "فرع عمر بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hom_o3_2", "name": "محمود بن محمد", "parentId": "hom_o_3", "generation": 8, "branch": "فرع عمر بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hom_o4_1", "name": "عمر بن أحمد", "parentId": "hom_o_4", "generation": 8, "branch": "فرع عمر بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hom_o4_2", "name": "علي بن أحمد", "parentId": "hom_o_4", "generation": 8, "branch": "فرع عمر بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hib_mst", "name": "مصطفى بن إبراهيم غشيم", "parentId": "h_ibrahim", "generation": 5, "branch": "فرع إبراهيم بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hib_m", "name": "محمد بن إبراهيم غشيم", "parentId": "h_ibrahim", "generation": 5, "branch": "فرع إبراهيم بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hib_a", "name": "أحمد بن إبراهيم غشيم", "parentId": "h_ibrahim", "generation": 5, "branch": "فرع إبراهيم بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hib_mst_1", "name": "إبراهيم بن مصطفى", "parentId": "hib_mst", "generation": 6, "branch": "فرع إبراهيم بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hib_mst_2", "name": "محمد بن مصطفى", "parentId": "hib_mst", "generation": 6, "branch": "فرع إبراهيم بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hib_m_1", "name": "مصطفى بن محمد", "parentId": "hib_m", "generation": 6, "branch": "فرع إبراهيم بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hib_m_2", "name": "أحمد بن محمد", "parentId": "hib_m", "generation": 6, "branch": "فرع إبراهيم بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hib_a_1", "name": "إبراهيم بن أحمد", "parentId": "hib_a", "generation": 6, "branch": "فرع إبراهيم بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hib_a_2", "name": "يحيى بن أحمد", "parentId": "hib_a", "generation": 6, "branch": "فرع إبراهيم بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hsl_nour", "name": "محمد نور بن سليم غشيم", "parentId": "h_salim", "generation": 5, "branch": "فرع سليم بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hsl_salem", "name": "سالم بن سليم غشيم", "parentId": "h_salim", "generation": 5, "branch": "فرع سليم بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hsl_n_1", "name": "سليم بن محمد نور", "parentId": "hsl_nour", "generation": 6, "branch": "فرع سليم بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hsl_n_2", "name": "بشار بن محمد نور", "parentId": "hsl_nour", "generation": 6, "branch": "فرع سليم بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hsl_s_1", "name": "محمد بن سالم", "parentId": "hsl_salem", "generation": 6, "branch": "فرع سليم بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hsl_s_2", "name": "أحمد بن سالم", "parentId": "hsl_salem", "generation": 6, "branch": "فرع سليم بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hm_salem", "name": "سالم بن محمد غشيم", "parentId": "h_muhammad", "generation": 5, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hm_ibrahim", "name": "إبراهيم بن محمد غشيم", "parentId": "h_muhammad", "generation": 5, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hm_yaseen", "name": "ياسين بن محمد غشيم", "parentId": "h_muhammad", "generation": 5, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hm_abdullatif", "name": "عبد اللطيف بن محمد غشيم", "parentId": "h_muhammad", "generation": 5, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hm_rajab", "name": "رجب بن محمد غشيم", "parentId": "h_muhammad", "generation": 5, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hm_hussam", "name": "محمد (حسام) بن محمد غشيم", "parentId": "h_muhammad", "generation": 5, "branch": "فرع محمد بن أحمد", "kunyah": "أبو محمد نور", "title": "", "bio": ""}, {"id": "hms_salim", "name": "محمد سليم بن سالم", "parentId": "hm_salem", "generation": 6, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hms_s_1", "name": "أحمد بن محمد سليم", "parentId": "hms_salim", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hms_s_2", "name": "بسام بن محمد سليم", "parentId": "hms_salim", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hms_s_3", "name": "سامر بن محمد سليم", "parentId": "hms_salim", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hms_s1_1", "name": "محمد بن أحمد", "parentId": "hms_s_1", "generation": 8, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hms_s1_2", "name": "سليم بن أحمد", "parentId": "hms_s_1", "generation": 8, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hms_s2_1", "name": "محمد بن بسام", "parentId": "hms_s_2", "generation": 8, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hms_s2_2", "name": "أحمد بن بسام", "parentId": "hms_s_2", "generation": 8, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hms_s3_1", "name": "محمد بن سامر", "parentId": "hms_s_3", "generation": 8, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hms_s3_2", "name": "عمر بن سامر", "parentId": "hms_s_3", "generation": 8, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmi_mustafa", "name": "مصطفى بن إبراهيم غشيم", "parentId": "hm_ibrahim", "generation": 6, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmi_m_bashir", "name": "محمد بشير بن مصطفى غشيم", "parentId": "hmi_mustafa", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmi_saeed", "name": "سعيد بن محمد بشير غشيم", "parentId": "hmi_m_bashir", "generation": 8, "branch": "فرع محمد بن أحمد", "kunyah": "أبو محمد بشير", "title": "مشارك في توثيق الشجرة 2010", "bio": "سعيد بن محمد غشيم (أبو محمد بشير)"}, {"id": "hmi_saeed_1", "name": "بشير بن سعيد غشيم", "parentId": "hmi_saeed", "generation": 9, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmy_1", "name": "محمد بن ياسين", "parentId": "hm_yaseen", "generation": 6, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmy_2", "name": "أحمد بن ياسين", "parentId": "hm_yaseen", "generation": 6, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hml_abashir", "name": "أحمد بشير بن عبد اللطيف غشيم", "parentId": "hm_abdullatif", "generation": 6, "branch": "فرع محمد بن أحمد", "kunyah": "أبو حسن", "title": "مشارك في توثيق الشجرة 2010", "bio": "أحمد بشير بن محمد غشيم (أبو حسن)"}, {"id": "hml_msaeed", "name": "محمد سعيد بن عبد اللطيف غشيم", "parentId": "hm_abdullatif", "generation": 6, "branch": "فرع محمد بن أحمد", "kunyah": "أبو محمد بشير", "title": "", "bio": ""}, {"id": "hml_mnour", "name": "محمد نور بن عبد اللطيف غشيم", "parentId": "hm_abdullatif", "generation": 6, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hml_ab_1", "name": "محمد بن أحمد بشير", "parentId": "hml_abashir", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hml_ab_2", "name": "محمود بن أحمد بشير", "parentId": "hml_abashir", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hml_ab_3", "name": "مفيد بن أحمد بشير", "parentId": "hml_abashir", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hml_ab_4", "name": "عبد الهادي بن أحمد بشير", "parentId": "hml_abashir", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hml_ab_5", "name": "حسن بن أحمد بشير", "parentId": "hml_abashir", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hml_ms_1", "name": "محمد أنور بن محمد سعيد", "parentId": "hml_msaeed", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hml_ms_2", "name": "محمد علي بن محمد سعيد", "parentId": "hml_msaeed", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hml_ms_3", "name": "محمود بن محمد سعيد", "parentId": "hml_msaeed", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hml_mn_1", "name": "نور الدين بن محمد نور", "parentId": "hml_mnour", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hml_mn_2", "name": "علاء بن محمد نور", "parentId": "hml_mnour", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmr_omar", "name": "عمر بن رجب غشيم", "parentId": "hm_rajab", "generation": 6, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmr_muh", "name": "محمد بن رجب غشيم", "parentId": "hm_rajab", "generation": 6, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmr_ahmad", "name": "أحمد بن رجب غشيم", "parentId": "hm_rajab", "generation": 6, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmr_hussain", "name": "حسين بن رجب غشيم", "parentId": "hm_rajab", "generation": 6, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmr_hasan", "name": "حسن بن رجب غشيم", "parentId": "hm_rajab", "generation": 6, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmr_sami", "name": "سامي بن رجب غشيم", "parentId": "hm_rajab", "generation": 6, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmr_o_1", "name": "محمود بن عمر", "parentId": "hmr_omar", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmr_o_2", "name": "مصطفى بن عمر", "parentId": "hmr_omar", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmr_m_1", "name": "أحمد بن محمد", "parentId": "hmr_muh", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmr_m_2", "name": "علي بن محمد", "parentId": "hmr_muh", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmh_khair", "name": "محمد خير بن حسام غشيم", "parentId": "hm_hussam", "generation": 6, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmh_ali", "name": "محمد علي بن حسام غشيم", "parentId": "hm_hussam", "generation": 6, "branch": "فرع محمد بن أحمد", "kunyah": "أبو محمد نور", "title": "مشارك في توثيق الشجرة 2010", "bio": "محمد علي بن محمد (حسام) غشيم (أبو محمد نور)"}, {"id": "hmh_mustafa", "name": "مصطفى بن حسام غشيم", "parentId": "hm_hussam", "generation": 6, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmhk_1", "name": "محمد بن محمد خير", "parentId": "hmh_khair", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmhk_2", "name": "ياسين بن محمد خير", "parentId": "hmh_khair", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmhk_3", "name": "أحمد بن محمد خير", "parentId": "hmh_khair", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmhk_4", "name": "بن عبيد بن محمد خير", "parentId": "hmh_khair", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmhk_5", "name": "حسان بن محمد خير", "parentId": "hmh_khair", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmhk_6", "name": "رامي بن محمد خير", "parentId": "hmh_khair", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmha_1", "name": "محمد نور بن محمد علي", "parentId": "hmh_ali", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmha_2", "name": "محمد علي بن محمد علي", "parentId": "hmh_ali", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmhm_1", "name": "محمد بن مصطفى", "parentId": "hmh_mustafa", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmhm_2", "name": "عبد القادر بن مصطفى", "parentId": "hmh_mustafa", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmhm_3", "name": "باسل بن مصطفى", "parentId": "hmh_mustafa", "generation": 7, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "hmhm_3_1", "name": "محمود بن باسل", "parentId": "hmhm_3", "generation": 8, "branch": "فرع محمد بن أحمد", "kunyah": "", "title": "", "bio": ""}, {"id": "dev_mustafa", "name": "مصطفى بن محمد بن مصطفى غشيم", "parentId": "hff1_1", "generation": 10, "branch": "فرع حاج فارس", "kunyah": "أبو محمد", "title": "مطور ومبرمج المنصة الرقمية للشجرة", "bio": "قام بتصميم وتطوير وبرمجة هذه المنصة الرقمية التفاعلية لشجرة نسب آل غشيم لخدمة أبناء العائلة وحفظ أنسابهم وصلة أرحامهم."}];
+    // Embedded Authentic Family Tree Dataset (36 Individuals)
+    let initialFamilyData = [
+  {
+    "id": "1",
+    "name": "محمد علي غشيم",
+    "parentId": null,
+    "generation": 1,
+    "branch": "الأصل",
+    "kunyah": "أبو يوسف",
+    "title": "الجد الجامع والمؤسس لآل غشيم",
+    "bio": "الجد الأكبر لعموم عائلة غشيم الكريمة."
+  },
+  {
+    "id": "2",
+    "name": "يوسف",
+    "parentId": "1",
+    "generation": 2,
+    "branch": "الأصل",
+    "kunyah": "أبو أحمد وأبو مصطفى",
+    "title": "والد فرعي الأسرة الرئيسيين",
+    "bio": "تفرع منه الفرعان الرئيسيان: فرع أحمد وفرع مصطفى."
+  },
+  {
+    "id": "ahmad",
+    "name": "أحمد",
+    "parentId": "2",
+    "generation": 3,
+    "branch": "فرع أحمد",
+    "kunyah": "أبو عبد اللطيف",
+    "title": "رأس فرع أحمد",
+    "bio": "تفرعت منه بطون فرع أحمد."
+  },
+  {
+    "id": "mustafa",
+    "name": "مصطفى",
+    "parentId": "2",
+    "generation": 3,
+    "branch": "فرع مصطفى",
+    "kunyah": "أبو عبد الحميد",
+    "title": "رأس فرع مصطفى",
+    "bio": "تفرع منه فرع مصطفى."
+  },
+  {
+    "id": "ah_muh",
+    "name": "محمد",
+    "parentId": "ahmad",
+    "generation": 4,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_mah",
+    "name": "محمود",
+    "parentId": "ahmad",
+    "generation": 4,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_ibr",
+    "name": "ابراهيم",
+    "parentId": "ahmad",
+    "generation": 4,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_omr",
+    "name": "عمر",
+    "parentId": "ahmad",
+    "generation": 4,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_ysf",
+    "name": "يوسف",
+    "parentId": "ahmad",
+    "generation": 4,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_lat",
+    "name": "عبد اللطيف",
+    "parentId": "ahmad",
+    "generation": 4,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_hsn",
+    "name": "حسن",
+    "parentId": "ahmad",
+    "generation": 4,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_khl",
+    "name": "خليل",
+    "parentId": "ahmad",
+    "generation": 4,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_abd",
+    "name": "عبد الله",
+    "parentId": "ahmad",
+    "generation": 4,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_muh_1",
+    "name": "أحمد",
+    "parentId": "ah_muh",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_muh_2",
+    "name": "محمد",
+    "parentId": "ah_muh",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_muh_3",
+    "name": "حمدو",
+    "parentId": "ah_muh",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_omr_1",
+    "name": "ابراهيم",
+    "parentId": "ah_omr",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_omr_2",
+    "name": "محمد حمادة",
+    "parentId": "ah_omr",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_ysf_1",
+    "name": "ابراهيم تركو",
+    "parentId": "ah_ysf",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_ysf_2",
+    "name": "محمد عكاش",
+    "parentId": "ah_ysf",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_lat_1",
+    "name": "نايف",
+    "parentId": "ah_lat",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_lat_2",
+    "name": "محمود",
+    "parentId": "ah_lat",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_lat_3",
+    "name": "أحمد",
+    "parentId": "ah_lat",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_lat_4",
+    "name": "محمد",
+    "parentId": "ah_lat",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_lat_5",
+    "name": "عبدو",
+    "parentId": "ah_lat",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_lat_6",
+    "name": "ابراهيم",
+    "parentId": "ah_lat",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_hsn_1",
+    "name": "ابراهيم",
+    "parentId": "ah_hsn",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_hsn_2",
+    "name": "محمود",
+    "parentId": "ah_hsn",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_abd_1",
+    "name": "أحمد",
+    "parentId": "ah_abd",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_abd_2",
+    "name": "محمد",
+    "parentId": "ah_abd",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_abd_3",
+    "name": "عبد القادر",
+    "parentId": "ah_abd",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_abd_4",
+    "name": "عمر",
+    "parentId": "ah_abd",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "mus_hamid",
+    "name": "عبد الحميد",
+    "parentId": "mustafa",
+    "generation": 4,
+    "branch": "فرع مصطفى",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "mus_ysf",
+    "name": "يوسف",
+    "parentId": "mustafa",
+    "generation": 4,
+    "branch": "فرع مصطفى",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "mus_hamid_1",
+    "name": "محمد",
+    "parentId": "mus_hamid",
+    "generation": 5,
+    "branch": "فرع مصطفى",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "mus_ysf_1",
+    "name": "فارس",
+    "parentId": "mus_ysf",
+    "generation": 5,
+    "branch": "فرع مصطفى",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  }
+];
 
-    // Load custom added members or session photos from localStorage if available
-    let storedData = localStorage.getItem('ghashim_family_data_v3');
+    // Load custom added members or server data (v4 with GitHub sync & cascade support)
+    let storedData = localStorage.getItem('ghashim_family_data_v4');
     let familyData = storedData ? JSON.parse(storedData) : initialFamilyData;
 
     let memberAvatars = JSON.parse(localStorage.getItem('ghashim_avatars_v1') || '{}');
@@ -2384,8 +2817,11 @@
         gatekeeper.style.display = 'none';
         appContainer.style.display = 'block';
         initD3Tree();
+        renderBranchChips();
         updateStats();
         applyRolePermissions();
+        updateGitHubSyncBadge();
+        syncLatestDataFromServer();
       }, 400);
     }
 
@@ -2458,6 +2894,19 @@
     // =========================================================
     // EDIT & DELETE MEMBER FUNCTIONS (ADMIN ONLY)
     // =========================================================
+    function getAllDescendants(memberId) {
+      const list = [];
+      function recurse(id) {
+        const children = familyData.filter(m => m.parentId === id);
+        children.forEach(c => {
+          list.push(c);
+          recurse(c.id);
+        });
+      }
+      recurse(memberId);
+      return list;
+    }
+
     function openEditCurrentMember() {
       if (currentUserRole !== 'admin') {
         promptUpgradeToAdmin();
@@ -2468,9 +2917,11 @@
 
       document.getElementById('edit-member-id').value = activeModalMember.id;
       document.getElementById('edit-member-name').value = activeModalMember.name || '';
+      document.getElementById('edit-member-branch').value = activeModalMember.branch || 'الأصل';
       document.getElementById('edit-member-kunyah').value = activeModalMember.kunyah || '';
       document.getElementById('edit-member-title').value = activeModalMember.title || '';
       document.getElementById('edit-member-bio').value = activeModalMember.bio || '';
+      document.getElementById('edit-cascade-branch').checked = true;
       document.getElementById('edit-modal-subtitle').innerText = 'تعديل: ' + activeModalMember.name;
 
       document.getElementById('edit-member-modal').style.display = 'flex';
@@ -2491,19 +2942,38 @@
       const target = familyData.find(m => m.id === id);
       if (!target) return;
 
+      const oldBranch = target.branch;
+      const newBranch = document.getElementById('edit-member-branch').value.trim() || 'الأصل';
+      const cascadeBranch = document.getElementById('edit-cascade-branch').checked;
+
       target.name = document.getElementById('edit-member-name').value.trim();
+      target.branch = newBranch;
       target.kunyah = document.getElementById('edit-member-kunyah').value.trim();
       target.title = document.getElementById('edit-member-title').value.trim();
       target.bio = document.getElementById('edit-member-bio').value.trim();
 
+      let cascadeMsg = '';
+      if (cascadeBranch && oldBranch !== newBranch) {
+        const descendants = getAllDescendants(id);
+        descendants.forEach(d => {
+          d.branch = newBranch;
+        });
+        if (descendants.length > 0) {
+          cascadeMsg = ' وتحديث الفرع لـ ' + descendants.length + ' من الذرية';
+        }
+      }
+
       // Save changes
-      localStorage.setItem('ghashim_family_data_v3', JSON.stringify(familyData));
+      localStorage.setItem('ghashim_family_data_v4', JSON.stringify(familyData));
+      localStorage.setItem('ghashim_data_modified', 'true');
 
       closeEditMemberModal();
+      renderBranchChips();
       buildHierarchyAndRender();
-      showToast('تم حفظ تعديلات بيانات ' + target.name + ' بنجاح');
+      showToast('تم حفظ تعديلات بيانات ' + target.name + cascadeMsg + ' بنجاح');
       focusOnNode(id);
       setTimeout(() => openMemberModal(target), 400);
+      updateGitHubSyncBadge();
     }
 
     function deleteCurrentMember() {
@@ -2513,46 +2983,47 @@
       }
       if (!activeModalMember) return;
 
-      // Save reference before any dialogs
       const memberToDelete = Object.assign({}, activeModalMember);
       const memberId = memberToDelete.id;
       const memberName = memberToDelete.name;
-      const memberParentId = memberToDelete.parentId;
 
       if (memberId === '1') {
         alert('لا يمكن حذف الجد الجامع المؤسس للشجرة!');
         return;
       }
 
-      const children = familyData.filter(function(m) { return m.parentId === memberId; });
-      var confirmMsg = 'هل أنت متأكد من حذف (' + memberName + ') من الشجرة؟';
-      if (children.length > 0) {
-        confirmMsg += ' - لديه ' + children.length + ' أبناء سيتم نقلهم لوالده.';
+      const descendants = getAllDescendants(memberId);
+      let confirmMsg = '';
+      if (descendants.length > 0) {
+        confirmMsg = 'هل أنت متأكد من حذف (' + memberName + ') وجميع أبنائه وأحفاده (' + descendants.length + ' فرد من الذرية - إجمالي ' + (descendants.length + 1) + ' أفراد) نهائياً من الشجرة؟\n\nتنبيه: سيتم حذف كامل هذه السلالة المندرجة تحته ولا يمكن التراجع.';
+      } else {
+        confirmMsg = 'هل أنت متأكد من حذف (' + memberName + ') من الشجرة؟';
       }
 
-      // Close modal first so confirm() works cleanly
       closeMemberModal();
 
-      // Small delay to let modal close before confirm dialog
       setTimeout(function() {
         if (!confirm(confirmMsg)) return;
 
-        // Re-link children to grandparent
-        children.forEach(function(c) {
-          c.parentId = memberParentId;
+        const idsToRemove = new Set([memberId, ...descendants.map(d => d.id)]);
+        familyData = familyData.filter(m => !idsToRemove.has(m.id));
+
+        // Clean up avatars
+        idsToRemove.forEach(id => {
+          delete memberAvatars[id];
         });
+        localStorage.setItem('ghashim_avatars_v1', JSON.stringify(memberAvatars));
+        localStorage.setItem('ghashim_family_data_v4', JSON.stringify(familyData));
+        localStorage.setItem('ghashim_data_modified', 'true');
 
-        // Remove from familyData
-        familyData = familyData.filter(function(m) { return m.id !== memberId; });
-        localStorage.setItem('ghashim_family_data_v3', JSON.stringify(familyData));
-
+        renderBranchChips();
         buildHierarchyAndRender();
         updateStats();
-        showToast('تم حذف ' + memberName + ' من الشجرة بنجاح');
+        showToast('تم حذف ' + memberName + ' وذريته (' + idsToRemove.size + ' فرد) بنجاح');
         activeModalMember = null;
+        updateGitHubSyncBadge();
       }, 200);
     }
-
 
     function togglePasswordVisibility() {
       const pwdInput = document.getElementById('family-password');
@@ -2617,7 +3088,7 @@
       // Default expand first 3 generations, collapse deeper to keep view clean & fast
       rootNode.descendants().forEach(d => {
         d._children = d.children; // cache original children
-        if (d.depth >= 3 && d.children) {
+        if (d.depth >= 4 && d.children) {
           d.children = null; // collapse
         }
       });
@@ -2820,16 +3291,33 @@
       return name.length > max ? name.substring(0, max - 1) + '…' : name;
     }
 
+    const BRANCH_PALETTE = [
+      '#2C5F2D', // Deep Emerald (Root)
+      '#1A535C', // Ocean Teal (Ahmad)
+      '#C5A059', // Royal Bronze (Mustafa)
+      '#8B263E', // Deep Ruby
+      '#C05621', // Terracotta Bronze
+      '#2B6CB0', // Sapphire Blue
+      '#6B46C1', // Royal Purple
+      '#285E61', // Pine Teal
+      '#7B341E', // Russet Brown
+      '#319795', // Persian Green
+      '#D69E2E', // Warm Gold
+      '#4A5568'  // Slate Grey
+    ];
+
     function getBranchColor(branch) {
-      if (!branch) return '#2C5F2D';
-      if (branch.includes('الأصل') || branch.includes('الجامع')) return '#D4AF37';
-      if (branch.includes('حاج فارس')) return '#8B263E';
-      if (branch.includes('برقو')) return '#C05621';
-      if (branch.includes('عبد اللطيف')) return '#285E61';
-      if (branch.includes('محمد بن أحمد')) return '#2B6CB0';
-      if (branch.includes('علي')) return '#6B46C1';
-      if (branch.includes('عمر')) return '#7B341E';
-      return '#2C5F2D';
+      if (!branch || branch === 'الأصل') return '#2C5F2D';
+      if (branch.includes('أحمد')) return '#1A535C';
+      if (branch.includes('مصطفى')) return '#C5A059';
+
+      // Deterministic palette hash for any custom branch
+      let hash = 0;
+      for (let i = 0; i < branch.length; i++) {
+        hash = branch.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      const idx = Math.abs(hash) % BRANCH_PALETTE.length;
+      return BRANCH_PALETTE[idx];
     }
 
     function toggleNodeDescendants(d) {
@@ -3004,22 +3492,49 @@
     }
 
     // =========================================================
-    // BRANCH FILTER CHIPS
+    // BRANCH FILTER CHIPS (DYNAMIC 100%)
     // =========================================================
+    function renderBranchChips() {
+      const container = document.getElementById('branch-chips');
+      const datalist = document.getElementById('branch-datalist');
+      if (!container) return;
+
+      const branches = [];
+      familyData.forEach(m => {
+        if (m.branch && !branches.includes(m.branch)) {
+          branches.push(m.branch);
+        }
+      });
+
+      // Update datalist for inputs
+      if (datalist) {
+        datalist.innerHTML = branches.map(b => '<option value="' + b + '">').join('');
+      }
+
+      // Render filter chips
+      let html = '<button class="filter-chip ' + (currentBranchFilter === 'all' ? 'active' : '') + '" onclick="filterByBranch(\'all\', this)">الكل</button>';
+      branches.forEach(b => {
+        const isActive = currentBranchFilter === b ? 'active' : '';
+        html += '<button class="filter-chip ' + isActive + '" onclick="filterByBranch(\'' + b + '\', this)">' + b + '</button>';
+      });
+
+      container.innerHTML = html;
+    }
+
     function filterByBranch(branchName, btn) {
       document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-      btn.classList.add('active');
+      if (btn) btn.classList.add('active');
       currentBranchFilter = branchName;
       buildHierarchyAndRender();
       setTimeout(fitToScreen, 150);
     }
 
     function getBranchSubtreeIds(branchName) {
-      const ids = new Set(['1', '2', '3', '4']); // Keep root ancestry
+      const ids = new Set();
       familyData.forEach(m => {
-        if (m.branch && m.branch.includes(branchName)) {
+        if (m.branch && (m.branch === branchName || m.branch.includes(branchName))) {
           ids.add(m.id);
-          // Add ancestors
+          // Add all ancestors dynamically up to root
           let curr = m;
           while (curr && curr.parentId) {
             ids.add(curr.parentId);
@@ -3183,6 +3698,14 @@
     // =========================================================
     // ADD MEMBER MODAL & LOCAL PERSISTENCE
     // =========================================================
+    function onAddParentChange() {
+      const parentId = document.getElementById('new-member-parent').value;
+      const parent = familyData.find(m => m.id === parentId);
+      if (parent) {
+        document.getElementById('new-member-branch').value = parent.branch || 'الأصل';
+      }
+    }
+
     function openAddMemberModal(presetParentId = null) {
       const modal = document.getElementById('add-member-modal');
       const parentSelect = document.getElementById('new-member-parent');
@@ -3193,7 +3716,10 @@
       `).join('');
 
       document.getElementById('add-member-form').reset();
-      if (presetParentId) parentSelect.value = presetParentId;
+      if (presetParentId) {
+        parentSelect.value = presetParentId;
+      }
+      onAddParentChange();
 
       modal.style.display = 'flex';
     }
@@ -3212,6 +3738,7 @@
       e.preventDefault();
       const parentId = document.getElementById('new-member-parent').value;
       const name = document.getElementById('new-member-name').value.trim();
+      const branchInput = document.getElementById('new-member-branch').value.trim();
       const kunyah = document.getElementById('new-member-kunyah').value.trim();
       const title = document.getElementById('new-member-title').value.trim();
       const notes = document.getElementById('new-member-notes').value.trim();
@@ -3219,26 +3746,30 @@
       const parent = familyData.find(m => m.id === parentId);
       if (!parent) return;
 
-      const newId = 'custom_' + Date.now();
+      const newBranch = branchInput || parent.branch || 'الأصل';
+      const newId = 'mem_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
       const newMember = {
         id: newId,
         name: name,
         parentId: parentId,
         generation: parent.generation + 1,
-        branch: parent.branch,
+        branch: newBranch,
         kunyah: kunyah,
         title: title,
         bio: notes
       };
 
       familyData.push(newMember);
-      localStorage.setItem('ghashim_family_data_v3', JSON.stringify(familyData));
+      localStorage.setItem('ghashim_family_data_v4', JSON.stringify(familyData));
+      localStorage.setItem('ghashim_data_modified', 'true');
 
       closeAddMemberModal();
+      renderBranchChips();
       buildHierarchyAndRender();
       updateStats();
       showToast(`تمت إضافة ${name} بنجاح إلى الشجرة`);
       focusOnNode(newId);
+      updateGitHubSyncBadge();
     }
 
     function updateStats() {
@@ -3371,11 +3902,179 @@
         closeMemberModal();
         closeArchiveModal();
         closeAddMemberModal();
+        closeEditMemberModal();
+        closeGitHubSyncModal();
         clearSearch();
       }
     });
 
     // Initialize on window load
+    // =========================================================
+    // GITHUB CLOUD SYNC & REPO PERSISTENCE
+    // =========================================================
+    function updateGitHubSyncBadge() {
+      const dot = document.getElementById('sync-pending-dot');
+      const isModified = localStorage.getItem('ghashim_data_modified');
+      if (dot) {
+        dot.style.display = isModified ? 'inline-block' : 'none';
+      }
+    }
+
+    function openGitHubSyncModal() {
+      if (currentUserRole !== 'admin') {
+        promptUpgradeToAdmin();
+        return;
+      }
+      const token = localStorage.getItem('ghashim_github_token') || '';
+      document.getElementById('github-token-input').value = token;
+      document.getElementById('github-sync-status').style.display = 'none';
+      document.getElementById('github-sync-modal').style.display = 'flex';
+    }
+
+    function closeGitHubSyncModal() {
+      document.getElementById('github-sync-modal').style.display = 'none';
+    }
+
+    async function handlePublishToGitHub() {
+      const tokenInput = document.getElementById('github-token-input');
+      const token = tokenInput.value.trim();
+      const statusEl = document.getElementById('github-sync-status');
+      const btn = document.getElementById('btn-publish-gh');
+
+      if (!token) {
+        statusEl.style.display = 'block';
+        statusEl.style.background = '#FED7D7';
+        statusEl.style.color = '#C53030';
+        statusEl.innerText = 'يرجى إدخال رمز GitHub Personal Access Token للمتابعة';
+        return;
+      }
+
+      localStorage.setItem('ghashim_github_token', token);
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الاتصال بـ GitHub وحفظ البيانات...';
+      statusEl.style.display = 'block';
+      statusEl.style.background = '#EBF8FF';
+      statusEl.style.color = '#2B6CB0';
+      statusEl.innerText = 'جاري إرسال البيانات المحدثة إلى المستودع (mghashim/ghashim-family-tree)...';
+
+      const repoOwner = 'mghashim';
+      const repoName = 'ghashim-family-tree';
+      const filePath = 'family-data.json';
+      const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`;
+
+      try {
+        let currentSha = null;
+        try {
+          const getRes = await fetch(apiUrl, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Accept': 'application/vnd.github.v3+json'
+            }
+          });
+          if (getRes.ok) {
+            const fileInfo = await getRes.json();
+            currentSha = fileInfo.sha;
+          }
+        } catch (e) {
+          console.log('SHA check note:', e);
+        }
+
+        const jsonContent = JSON.stringify(familyData, null, 2);
+        const base64Content = btoa(unescape(encodeURIComponent(jsonContent)));
+
+        const bodyPayload = {
+          message: `تحديث شجرة عائلة آل غشيم (${familyData.length} فرد) عبر لوحة التحكم`,
+          content: base64Content,
+          branch: 'master'
+        };
+        if (currentSha) {
+          bodyPayload.sha = currentSha;
+        }
+
+        const putRes = await fetch(apiUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(bodyPayload)
+        });
+
+        if (!putRes.ok) {
+          const errData = await putRes.json();
+          throw new Error(errData.message || 'فشل الحفظ على GitHub');
+        }
+
+        localStorage.removeItem('ghashim_data_modified');
+        updateGitHubSyncBadge();
+
+        statusEl.style.background = '#C6F6D5';
+        statusEl.style.color = '#22543D';
+        statusEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> <strong>تم النشر والحفظ بنجاح!</strong><br>تم تحديث قاعدة البيانات على GitHub Pages بشكل دائم. ستنعكس التغييرات لجميع الزوار خلال دقيقة.';
+        showToast('تم نشر الشجرة وحفظها على GitHub بنجاح');
+      } catch (err) {
+        statusEl.style.background = '#FED7D7';
+        statusEl.style.color = '#C53030';
+        statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> خطأ أثناء النشر: ${err.message}`;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-brands fa-github"></i> حفظ ونشر التغييرات الآن إلى GitHub Pages';
+      }
+    }
+
+    function downloadFamilyDataJSON() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(familyData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "family-data.json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast('تم تحميل ملف family-data.json بنجاح');
+    }
+
+    function resetToAuthenticHierarchy() {
+      if (currentUserRole !== 'admin') {
+        promptUpgradeToAdmin();
+        return;
+      }
+      if (!confirm('هل أنت متأكد من استعادة الشجرة الأصلية الأساسية المعتمدة (36 فرداً)؟ سيتم مسح أي إضافات أو تعديلات محلية غير محفوظة.')) {
+        return;
+      }
+      familyData = JSON.parse(JSON.stringify(initialFamilyData));
+      localStorage.setItem('ghashim_family_data_v4', JSON.stringify(familyData));
+      localStorage.removeItem('ghashim_data_modified');
+      renderBranchChips();
+      buildHierarchyAndRender();
+      updateStats();
+      updateGitHubSyncBadge();
+      closeGitHubSyncModal();
+      showToast('تمت استعادة الهيكلية الأصلية للشجرة بنجاح');
+    }
+
+    async function syncLatestDataFromServer() {
+      try {
+        const res = await fetch('family-data.json?v=' + Date.now());
+        if (res.ok) {
+          const serverData = await res.json();
+          if (Array.isArray(serverData) && serverData.length > 0) {
+            const localModified = localStorage.getItem('ghashim_data_modified');
+            if (!localModified || !storedData) {
+              familyData = serverData;
+              localStorage.setItem('ghashim_family_data_v4', JSON.stringify(familyData));
+              renderBranchChips();
+              buildHierarchyAndRender();
+              updateStats();
+            }
+          }
+        }
+      } catch (err) {
+        console.log('Server sync note:', err);
+      }
+    }
+
     window.addEventListener('DOMContentLoaded', initAuth);
   
     // Developer Contact Popup

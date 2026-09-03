@@ -1,0 +1,362 @@
+[
+  {
+    "id": "1",
+    "name": "محمد علي غشيم",
+    "parentId": null,
+    "generation": 1,
+    "branch": "الأصل",
+    "kunyah": "أبو يوسف",
+    "title": "الجد الجامع والمؤسس لآل غشيم",
+    "bio": "الجد الأكبر لعموم عائلة غشيم الكريمة."
+  },
+  {
+    "id": "2",
+    "name": "يوسف",
+    "parentId": "1",
+    "generation": 2,
+    "branch": "الأصل",
+    "kunyah": "أبو أحمد وأبو مصطفى",
+    "title": "والد فرعي الأسرة الرئيسيين",
+    "bio": "تفرع منه الفرعان الرئيسيان: فرع أحمد وفرع مصطفى."
+  },
+  {
+    "id": "ahmad",
+    "name": "أحمد",
+    "parentId": "2",
+    "generation": 3,
+    "branch": "فرع أحمد",
+    "kunyah": "أبو عبد اللطيف",
+    "title": "رأس فرع أحمد",
+    "bio": "تفرعت منه بطون فرع أحمد."
+  },
+  {
+    "id": "mustafa",
+    "name": "مصطفى",
+    "parentId": "2",
+    "generation": 3,
+    "branch": "فرع مصطفى",
+    "kunyah": "أبو عبد الحميد",
+    "title": "رأس فرع مصطفى",
+    "bio": "تفرع منه فرع مصطفى."
+  },
+  {
+    "id": "ah_muh",
+    "name": "محمد",
+    "parentId": "ahmad",
+    "generation": 4,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_mah",
+    "name": "محمود",
+    "parentId": "ahmad",
+    "generation": 4,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_ibr",
+    "name": "ابراهيم",
+    "parentId": "ahmad",
+    "generation": 4,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_omr",
+    "name": "عمر",
+    "parentId": "ahmad",
+    "generation": 4,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_ysf",
+    "name": "يوسف",
+    "parentId": "ahmad",
+    "generation": 4,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_lat",
+    "name": "عبد اللطيف",
+    "parentId": "ahmad",
+    "generation": 4,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_hsn",
+    "name": "حسن",
+    "parentId": "ahmad",
+    "generation": 4,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_khl",
+    "name": "خليل",
+    "parentId": "ahmad",
+    "generation": 4,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_abd",
+    "name": "عبد الله",
+    "parentId": "ahmad",
+    "generation": 4,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_muh_1",
+    "name": "أحمد",
+    "parentId": "ah_muh",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_muh_2",
+    "name": "محمد",
+    "parentId": "ah_muh",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_muh_3",
+    "name": "حمدو",
+    "parentId": "ah_muh",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_omr_1",
+    "name": "ابراهيم",
+    "parentId": "ah_omr",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_omr_2",
+    "name": "محمد حمادة",
+    "parentId": "ah_omr",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_ysf_1",
+    "name": "ابراهيم تركو",
+    "parentId": "ah_ysf",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_ysf_2",
+    "name": "محمد عكاش",
+    "parentId": "ah_ysf",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_lat_1",
+    "name": "نايف",
+    "parentId": "ah_lat",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_lat_2",
+    "name": "محمود",
+    "parentId": "ah_lat",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_lat_3",
+    "name": "أحمد",
+    "parentId": "ah_lat",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_lat_4",
+    "name": "محمد",
+    "parentId": "ah_lat",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_lat_5",
+    "name": "عبدو",
+    "parentId": "ah_lat",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_lat_6",
+    "name": "ابراهيم",
+    "parentId": "ah_lat",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_hsn_1",
+    "name": "ابراهيم",
+    "parentId": "ah_hsn",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_hsn_2",
+    "name": "محمود",
+    "parentId": "ah_hsn",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_abd_1",
+    "name": "أحمد",
+    "parentId": "ah_abd",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_abd_2",
+    "name": "محمد",
+    "parentId": "ah_abd",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_abd_3",
+    "name": "عبد القادر",
+    "parentId": "ah_abd",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "ah_abd_4",
+    "name": "عمر",
+    "parentId": "ah_abd",
+    "generation": 5,
+    "branch": "فرع أحمد",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "mus_hamid",
+    "name": "عبد الحميد",
+    "parentId": "mustafa",
+    "generation": 4,
+    "branch": "فرع مصطفى",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "mus_ysf",
+    "name": "يوسف",
+    "parentId": "mustafa",
+    "generation": 4,
+    "branch": "فرع مصطفى",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "mus_hamid_1",
+    "name": "محمد",
+    "parentId": "mus_hamid",
+    "generation": 5,
+    "branch": "فرع مصطفى",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  },
+  {
+    "id": "mus_ysf_1",
+    "name": "فارس",
+    "parentId": "mus_ysf",
+    "generation": 5,
+    "branch": "فرع مصطفى",
+    "kunyah": "",
+    "title": "",
+    "bio": ""
+  }
+]
