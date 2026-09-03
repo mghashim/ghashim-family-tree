@@ -1101,45 +1101,358 @@
     }
 
     /* RESPONSIVE DESIGN */
+    /* =========================================================
+       MOBILE RESPONSIVE STYLES
+       ========================================================= */
+
+    /* Tablets & small laptops */
+    @media (max-width: 1024px) {
+      .brand-text h1 { font-size: 18px; }
+      .search-section { max-width: 260px; }
+      .nav-actions .btn span { display: none; }
+      .nav-actions .btn { padding: 8px 10px; min-width: auto; }
+    }
+
+    /* Mobile phones */
     @media (max-width: 768px) {
+      /* --- TOP NAV --- */
       .top-nav {
-        top: 8px;
-        left: 8px;
-        right: 8px;
-        padding: 0 10px;
+        top: 0;
+        left: 0;
+        right: 0;
+        border-radius: 0;
+        padding: 6px 10px;
         height: auto;
-        min-height: 56px;
+        min-height: 52px;
         flex-wrap: wrap;
-        padding-top: 6px;
-        padding-bottom: 6px;
+        gap: 4px;
+      }
+      .brand-section {
+        gap: 8px;
+      }
+      .brand-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
       }
       .brand-text h1 {
-        font-size: 17px;
+        font-size: 15px;
+      }
+      .brand-text p {
+        font-size: 9.5px;
       }
       .stats-badge {
-        display: none;
+        font-size: 10px;
+        padding: 3px 8px;
       }
       .search-section {
         order: 3;
         width: 100%;
         max-width: 100%;
-        margin: 6px 0 2px;
+        margin: 4px 0 2px;
       }
+      .search-section input {
+        font-size: 13px;
+        padding: 8px 36px 8px 12px;
+      }
+      .nav-actions {
+        gap: 4px;
+      }
+      .nav-actions .btn {
+        padding: 6px 8px;
+        font-size: 12px;
+        border-radius: 8px;
+      }
+      .nav-actions .btn span {
+        display: none;
+      }
+      .role-badge {
+        padding: 3px 8px;
+        font-size: 10px;
+        gap: 4px;
+      }
+      .role-badge span { display: none; }
+
+      /* --- SECONDARY BAR --- */
       .secondary-bar {
-        top: 118px;
-        left: 8px;
-        right: 8px;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: unset;
+        border-radius: 0;
+        padding: 6px 10px;
+        z-index: 200;
       }
       .chips-container {
         max-width: 100%;
+        gap: 4px;
+      }
+      .filter-chip {
+        font-size: 10.5px;
+        padding: 4px 10px;
       }
       .quick-tools {
         display: none;
       }
-      .floating-toolbar {
-        bottom: 14px;
-        left: 14px;
+
+      /* --- TREE CANVAS --- */
+      .tree-canvas {
+        top: 52px;
+        bottom: 40px;
       }
+
+      /* --- FLOATING TOOLBAR --- */
+      .floating-toolbar {
+        bottom: 54px;
+        left: 10px;
+      }
+      .floating-toolbar button {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+      }
+
+      /* --- CANVAS SIGNATURE --- */
+      .canvas-signature {
+        bottom: 48px;
+        right: 10px;
+        font-size: 8.5px;
+        padding: 3px 8px;
+        border-radius: 10px;
+      }
+
+      /* --- GATEKEEPER LOGIN --- */
+      .gatekeeper-screen {
+        padding: 16px;
+      }
+      .gatekeeper-card {
+        padding: 28px 20px;
+        border-radius: 18px;
+        max-width: 95%;
+      }
+      .gatekeeper-card h1 {
+        font-size: 26px;
+      }
+      .gatekeeper-card .subtitle {
+        font-size: 12px;
+      }
+      .gatekeeper-card .welcome-text {
+        font-size: 13px;
+        padding: 0 4px;
+      }
+      .emblem-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+      }
+      .login-btn {
+        font-size: 15px;
+        padding: 13px 24px;
+      }
+      .developer-credit-box {
+        margin-top: 16px;
+        padding-top: 12px;
+      }
+      .dev-tag { font-size: 10px; }
+      .dev-author { font-size: 13px; }
+
+      /* --- MODALS --- */
+      .modal-card {
+        width: 96%;
+        max-width: 96%;
+        max-height: 92vh;
+        border-radius: 16px;
+        margin: 0;
+      }
+      .modal-header {
+        padding: 20px 16px 14px;
+      }
+      .modal-name {
+        font-size: 20px;
+      }
+      .modal-kunyah-title {
+        font-size: 14px;
+      }
+      .modal-body {
+        padding: 14px 16px 20px;
+      }
+      .modal-close-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 18px;
+        top: 8px;
+        left: 8px;
+      }
+      .member-avatar {
+        width: 56px;
+        height: 56px;
+        font-size: 22px;
+      }
+      .section-label {
+        font-size: 13px;
+      }
+      .lineage-chain {
+        font-size: 14px;
+        padding: 10px 12px;
+      }
+      .children-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 6px;
+      }
+      .child-card {
+        padding: 8px;
+      }
+      .child-card .child-name {
+        font-size: 12px;
+      }
+      .father-card {
+        padding: 10px 12px;
+      }
+      .badge {
+        font-size: 10px;
+        padding: 2px 8px;
+      }
+
+      /* Admin actions in modal */
+      .admin-actions-bar {
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 14px;
+        padding-top: 14px;
+      }
+      .admin-actions-bar .btn {
+        width: 100%;
+        justify-content: center;
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+      .viewer-lock-notice {
+        font-size: 11px;
+        padding: 8px 10px;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      /* --- EDIT MODAL --- */
+      .form-group {
+        margin-bottom: 12px;
+      }
+      .form-label {
+        font-size: 12px;
+      }
+      .form-input {
+        font-size: 14px;
+        padding: 10px 12px;
+      }
+
+      /* --- ARCHIVE MODAL --- */
+      .archive-tabs {
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 2px;
+      }
+      .archive-tab {
+        font-size: 11px;
+        padding: 8px 10px;
+        white-space: nowrap;
+      }
+      .preface-box {
+        font-size: 13px;
+        padding: 14px;
+      }
+      .dedication-box {
+        padding: 12px;
+        font-size: 13px;
+      }
+      .elders-grid {
+        grid-template-columns: 1fr;
+      }
+
+      /* --- DEVELOPER POPUP --- */
+      .dev-popup-card {
+        width: 94%;
+        max-width: 94%;
+      }
+      .dev-popup-header {
+        padding: 22px 16px 18px;
+      }
+      .dev-popup-avatar {
+        width: 52px;
+        height: 52px;
+        font-size: 22px;
+      }
+      .dev-popup-name {
+        font-size: 18px;
+      }
+      .dev-popup-role {
+        font-size: 11px;
+      }
+      .dev-popup-body {
+        padding: 18px 16px 22px;
+      }
+      .dev-popup-desc {
+        font-size: 12.5px;
+      }
+      .dev-contact-btn {
+        font-size: 13px;
+        padding: 11px 14px;
+      }
+
+      /* --- UPGRADE ADMIN MODAL --- */
+      #upgrade-admin-modal .modal-card {
+        max-width: 94%;
+      }
+
+      /* --- DIGITAL DEV CARD (Archive) --- */
+      .digital-dev-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 16px;
+        gap: 10px;
+      }
+      .dev-badge-icon {
+        margin: 0 auto;
+      }
+      .dev-card-highlight {
+        font-size: 17px;
+      }
+      .dev-card-desc {
+        font-size: 11.5px;
+      }
+
+      /* --- ADD MEMBER MODAL --- */
+      #add-member-modal .modal-card {
+        max-width: 96%;
+      }
+
+      /* --- TOAST NOTIFICATION --- */
+      .toast-notification {
+        left: 10px;
+        right: 10px;
+        bottom: 50px;
+        max-width: none;
+        font-size: 13px;
+      }
+
+      /* --- EXPORT DROPDOWN --- */
+      .export-dropdown {
+        right: 0;
+        min-width: 200px;
+      }
+    }
+
+    /* Very small phones (iPhone SE, etc.) */
+    @media (max-width: 380px) {
+      .brand-text h1 { font-size: 13px; }
+      .brand-icon { width: 30px; height: 30px; font-size: 14px; }
+      .top-nav { padding: 4px 8px; min-height: 48px; }
+      .nav-actions .btn { padding: 5px 6px; font-size: 11px; }
+      .gatekeeper-card h1 { font-size: 22px; }
+      .gatekeeper-card { padding: 24px 16px; }
+      .modal-name { font-size: 18px; }
+      .lineage-chain { font-size: 13px; }
+      .children-grid { grid-template-columns: 1fr 1fr; }
     }
   
     /* Developer Attribution Styles */
