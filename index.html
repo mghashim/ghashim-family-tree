@@ -2200,34 +2200,44 @@
       }
       if (!activeModalMember) return;
 
-      if (activeModalMember.id === '1') {
-        alert('لا يمكن حذف الجد الجامع المؤسس للشجرة (محمد علي غشيم)!');
+      // Save reference before any dialogs
+      const memberToDelete = Object.assign({}, activeModalMember);
+      const memberId = memberToDelete.id;
+      const memberName = memberToDelete.name;
+      const memberParentId = memberToDelete.parentId;
+
+      if (memberId === '1') {
+        alert('لا يمكن حذف الجد الجامع المؤسس للشجرة!');
         return;
       }
 
-      const children = familyData.filter(m => m.parentId === activeModalMember.id);
-      let confirmMsg = 'هل أنت متأكد من رغبتك في حذف (' + activeModalMember.name + ') من الشجرة؟';
+      const children = familyData.filter(function(m) { return m.parentId === memberId; });
+      var confirmMsg = 'هل أنت متأكد من حذف (' + memberName + ') من الشجرة؟';
       if (children.length > 0) {
-        confirmMsg += ' - تنبيه: هذا الفرد لديه (' + children.length + ') من الأبناء، سيتم تلقائياً نقل تبعيتهم إلى والده للحفاظ على تسلسل ذريتهم في الشجرة.';
+        confirmMsg += ' - لديه ' + children.length + ' أبناء سيتم نقلهم لوالده.';
       }
 
-      if (!confirm(confirmMsg)) return;
-
-      // Re-link children to grandparent
-      const grandParentId = activeModalMember.parentId;
-      children.forEach(c => {
-        c.parentId = grandParentId;
-      });
-
-      // Remove from familyData
-      familyData = familyData.filter(m => m.id !== activeModalMember.id);
-      localStorage.setItem('ghashim_family_data_v3', JSON.stringify(familyData));
-
+      // Close modal first so confirm() works cleanly
       closeMemberModal();
-      buildHierarchyAndRender();
-      updateStats();
-      showToast('تم حذف ' + activeModalMember.name + ' من الشجرة بنجاح');
-      activeModalMember = null;
+
+      // Small delay to let modal close before confirm dialog
+      setTimeout(function() {
+        if (!confirm(confirmMsg)) return;
+
+        // Re-link children to grandparent
+        children.forEach(function(c) {
+          c.parentId = memberParentId;
+        });
+
+        // Remove from familyData
+        familyData = familyData.filter(function(m) { return m.id !== memberId; });
+        localStorage.setItem('ghashim_family_data_v3', JSON.stringify(familyData));
+
+        buildHierarchyAndRender();
+        updateStats();
+        showToast('تم حذف ' + memberName + ' من الشجرة بنجاح');
+        activeModalMember = null;
+      }, 200);
     }
 
 
